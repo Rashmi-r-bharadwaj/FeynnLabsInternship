@@ -1,0 +1,43 @@
+pip install streamlit
+import streamlit as st
+import os
+import cv2
+import numpy as np
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.vgg16 import preprocess_input
+
+# Load your trained model
+model = load_model("path_to_your_trained_model.h5")
+
+# Class labels
+class_labels = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+def preprocess_image(img_path):
+    img = image.load_img(img_path, target_size=(64, 64))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = preprocess_input(img_array)
+    return img_array
+
+def predict_class(img_array):
+    predictions = model.predict(img_array)
+    predicted_class = np.argmax(predictions) + 1  # Add 1 to convert back to original class labels
+    return predicted_class
+
+# Streamlit web app
+st.title("Number Classification Web App")
+st.write("Upload an image of a number (1 to 8) to get predictions.")
+
+uploaded_file = st.file_uploader("Choose an image...", type="jpg")
+
+if uploaded_file is not None:
+    # Display the uploaded image
+    st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
+
+    # Make predictions
+    img_array = preprocess_image(uploaded_file)
+    predicted_class = predict_class(img_array)
+
+    # Display the prediction
+    st.write(f"Predicted Class: {predicted_class} ({class_labels[predicted_class - 1]})")
